@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  username    String       @unique
+  email       String       @unique
+  role        UserRole
+  password    String
+  status      UserStatus   @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  UserProfile UserProfile?
+  Booking     Booking[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @unique @db.ObjectId
+  name       String?
+  image      String?
+  bio        String?
+  profession String?
+  address    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
+}
+
+model Flat {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  image         String
+  squareFeet    Int
+  totalBedrooms Int
+  totalRooms    Int
+  amenities     String
+  location      String
+  description   String
+  availability  Boolean   @default(true)
+  rent          Int
+  advanceAmount Int
+  userId        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  Booking       Booking[]
+
+  @@map("flats")
+}
+
+model Booking {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  flatId    String   @db.ObjectId
+  flat      Flat     @relation(fields: [flatId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  status    Status   @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bookings")
+}
+
+enum Status {
+  PENDING
+  BOOKED
+  REJECTED
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
